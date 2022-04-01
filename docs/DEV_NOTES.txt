@@ -1,0 +1,1 @@
+sqflite doesnt work in the release mode make sure put sqlite3.dll in there
