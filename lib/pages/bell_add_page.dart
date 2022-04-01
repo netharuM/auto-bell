@@ -31,8 +31,14 @@ class _AddNewBellPageState extends State<AddNewBellPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: TitleBar(
+        title: 'editing bell',
         backgroundColor: Theme.of(context).primaryColor,
-        title: "Add New Bell",
+        closeButtonStyle: ButtonStyle(
+          foregroundColor: MaterialStateProperty.all<Color>(Colors.red),
+          overlayColor: MaterialStateProperty.all<Color>(Colors.red),
+        ),
+        closeButtonColor: Colors.black,
+        buttonColor: Colors.black,
       ),
       floatingActionButton: Visibility(
         visible: _filled,
