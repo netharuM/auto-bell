@@ -26,6 +26,9 @@ class _BellPageState extends State<BellPage> {
           Bell()..fromMap(bellData, intAsBool: true, listAsStrings: true),
         );
       }
+      for (var bell in bells) {
+        bell.dispose();
+      }
       setState(() {
         bells = newBells;
       });
