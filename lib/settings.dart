@@ -16,6 +16,9 @@ class Settings {
   Future<bool?> get getPreventClose async =>
       (await prefs).getBool('preventClose');
 
+  Future<bool?> get getShowNotifications async =>
+      (await prefs).getBool('showNotifications');
+
   Future<void> setLaunchOnStartup(bool value) async {
     SharedPreferences sharedPrefs = await prefs;
     value ? launchAtStartup.enable() : launchAtStartup.disable();
@@ -26,5 +29,10 @@ class Settings {
     SharedPreferences sharedPrefs = await prefs;
     windowManager.setPreventClose(value);
     await sharedPrefs.setBool('preventClose', value);
+  }
+
+  Future<void> setShowNotifications(bool value) async {
+    SharedPreferences sharedPrefs = await prefs;
+    sharedPrefs.setBool('showNotifications', value);
   }
 }

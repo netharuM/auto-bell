@@ -126,25 +126,33 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
   final Settings _settings = Settings.instance;
   late bool _launchOnStartup;
   late bool _preventClose;
+  late bool _showNotifications;
 
   @override
   void initState() {
     super.initState();
     _launchOnStartup = false;
     _preventClose = false;
+    _showNotifications = false;
     _init();
   }
 
   Future<void> _init() async {
     bool? launchOnStartup = await _settings.getLaunchOnStartup;
     bool? preventClose = await _settings.getPreventClose;
+    bool? showNotifications = await _settings.getShowNotifications;
     if (launchOnStartup == null) {
       await _settings.setLaunchOnStartup(false);
       launchOnStartup = false;
     }
+    if (showNotifications == null) {
+      await _settings.setShowNotifications(true);
+      showNotifications = true;
+    }
     setState(() {
       _launchOnStartup = launchOnStartup!;
       _preventClose = preventClose!;
+      _showNotifications = showNotifications!;
     });
   }
 
@@ -170,6 +178,16 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
               _preventClose = value;
             });
             _settings.setPreventClose(value);
+          },
+        ),
+        TickOption(
+          value: _showNotifications,
+          text: "show notifications",
+          onChanged: (bool value) {
+            setState(() {
+              _showNotifications = value;
+            });
+            _settings.setShowNotifications(value);
           },
         ),
       ],

@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:local_notifier/local_notifier.dart';
+import 'package:auto_bell/settings.dart';
 
 class Bell {
   TimeOfDay? time;
@@ -18,6 +20,8 @@ class Bell {
   Function()? onStop;
   Function()? onActivate;
   final AudioPlayer audioPlayer = AudioPlayer();
+  final LocalNotifier _localNotifier = LocalNotifier.instance;
+  final Settings _settings = Settings.instance;
 
   // days
   // 0 - monday
@@ -40,7 +44,18 @@ class Bell {
   }
 
   void dispose() {
+    deactivateBell();
     audioPlayer.dispose();
+  }
+
+  Future<void> notify() async {
+    LocalNotification notification = LocalNotification(
+      title: "icmu-autobell",
+      body:
+          "${title ?? "bell"} is gonna be ringing at ${DateFormat("HH:mm").format(dateTime)}",
+      subtitle: title,
+    );
+    await _localNotifier.notify(notification);
   }
 
   void activateBell({bool force = false, bool disableTimer = false}) {
@@ -52,12 +67,28 @@ class Bell {
         weekDay == "Tuesday" && days[1] ||
         weekDay == "Wednesday" && days[2] ||
         weekDay == "Thursday" && days[3] ||
-        weekDay == "Friday" && days[4]) {
+        weekDay == "Friday" && days[4] ||
+        weekDay == "Saturday" ||
+        weekDay == "Sunday") {
       if (!disableTimer) {
         countDown = Timer(
           dateTime.difference(DateTime.now()),
           () => playBell(force: false),
         );
+        _settings.getShowNotifications.then((value) {
+          if (value ?? true) {
+            Duration ringAt = (dateTime.subtract(const Duration(minutes: 1)))
+                .difference(DateTime.now());
+            Timer(
+              ringAt,
+              () {
+                if (!ringAt.isNegative) {
+                  notify();
+                }
+              },
+            );
+          }
+        });
       }
       audioPlayer.setFilePath(pathToAudio!);
       audioPlayer.setLoopMode(LoopMode.off);

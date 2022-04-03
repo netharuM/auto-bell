@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   bitsdojo_window_windows
   libwinmedia
+  local_notifier
   system_tray
   url_launcher_windows
   window_manager
