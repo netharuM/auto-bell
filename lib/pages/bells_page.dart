@@ -3,6 +3,7 @@ import 'package:auto_bell/models/bell.dart';
 import 'package:auto_bell/pages/bell_add_page.dart';
 import 'package:auto_bell/pages/bell_editor.dart';
 import 'package:auto_bell/pages/settings_page.dart';
+import 'package:auto_bell/settings.dart';
 import 'package:auto_bell/widgets/bell_card.dart';
 import 'package:auto_bell/widgets/title_bar.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,8 @@ class BellPage extends StatefulWidget {
 class _BellPageState extends State<BellPage> {
   List<Bell> bells = [];
   DBHandler dbHandler = DBHandler.instance;
+  final Settings _settings = Settings.instance;
+  bool _enableBG = true;
 
   void _updateBells() {
     dbHandler.getBells().then((List<Map<String, dynamic>> value) {
@@ -38,7 +41,16 @@ class _BellPageState extends State<BellPage> {
   @override
   void initState() {
     super.initState();
-    _updateBells();
+    _refresh();
+  }
+
+  void _refresh({bool settingsOnly = false}) {
+    _settings.getBGEnabled.then((value) {
+      setState(() {
+        _enableBG = value;
+      });
+    });
+    if (!settingsOnly) _updateBells();
   }
 
   @override
@@ -51,7 +63,7 @@ class _BellPageState extends State<BellPage> {
           children: [
             TextButton(
               onPressed: () {
-                _updateBells();
+                _refresh();
               },
               child: const Icon(Icons.refresh),
             ),
@@ -62,7 +74,7 @@ class _BellPageState extends State<BellPage> {
                   MaterialPageRoute(
                     builder: (context) => const SettingsPage(),
                   ),
-                );
+                ).then((value) => _refresh(settingsOnly: true));
               },
               child: const Icon(Icons.settings),
               style: ButtonStyle(
@@ -111,102 +123,121 @@ class _BellPageState extends State<BellPage> {
         },
         child: const Icon(Icons.add_alert),
       ),
-      body: Scrollbar(
-        child: ListView(
-          padding: const EdgeInsets.all(8),
-          children: [
-            for (int i = 0; i < bells.length; i++)
-              BellCard(
-                bell: bells[i],
-                onDelete: (Bell bell) async {
-                  await showDialog(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      elevation: 2,
-                      backgroundColor: const Color(0xff21252b),
-                      title: const Text("Delete that Bell?"),
-                      content: const Text(
-                          "Are you sure you want to delete that bell?"),
-                      actions: <Widget>[
-                        TextButton(
-                          style: ButtonStyle(
-                            foregroundColor: MaterialStateProperty.all<Color>(
-                                const Color(0xffff4473)),
-                            overlayColor: MaterialStateProperty.all<Color>(
-                                const Color(0xffff4473).withOpacity(0.1)),
+      body: Stack(
+        children: [
+          Visibility(
+            visible: _enableBG,
+            child: const Opacity(
+              child: Center(
+                child: Image(
+                  image: AssetImage('assets/icmuTransparent.png'),
+                ),
+              ),
+              opacity: 0.1,
+            ),
+          ),
+          Scrollbar(
+            child: ListView(
+              padding: const EdgeInsets.all(8),
+              children: [
+                for (int i = 0; i < bells.length; i++)
+                  BellCard(
+                    bell: bells[i],
+                    onDelete: (Bell bell) async {
+                      await showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          elevation: 2,
+                          backgroundColor: const Color(0xff21252b),
+                          title: const Text("Delete that Bell?"),
+                          content: const Text(
+                              "Are you sure you want to delete that bell?"),
+                          actions: <Widget>[
+                            TextButton(
+                              style: ButtonStyle(
+                                foregroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                        const Color(0xffff4473)),
+                                overlayColor: MaterialStateProperty.all<Color>(
+                                    const Color(0xffff4473).withOpacity(0.1)),
+                              ),
+                              child: const Text("Delete"),
+                              onPressed: () {
+                                dbHandler.deleteBell(bell).then((value) {
+                                  _updateBells();
+                                });
+                                Navigator.pop(context);
+                              },
+                            ),
+                            TextButton(
+                              style: ButtonStyle(
+                                foregroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                        const Color(0xff53a679)),
+                                overlayColor: MaterialStateProperty.all<Color>(
+                                    const Color(0xff53a679).withOpacity(0.1)),
+                              ),
+                              child: const Text("Cancel"),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    onEnabled: (Bell bell) {
+                      dbHandler
+                          .updateBell(
+                              bell..activateOnInit = !bell.activateOnInit)
+                          .then((value) {
+                        _updateBells();
+                      });
+                    },
+                    onDisabled: (Bell bell) {
+                      dbHandler
+                          .updateBell(
+                              bell..activateOnInit = !bell.activateOnInit)
+                          .then((value) {
+                        _updateBells();
+                      });
+                    },
+                    onPlay: (Bell bell) {
+                      if (!bell.activated) {
+                        bell.activateBell(force: true, disableTimer: true);
+                      }
+                      bell.playBell();
+                    },
+                    onStop: (Bell bell) {
+                      bell.stopBell().then((value) {
+                        if (!bell.activated) {
+                          bell.activateBell(force: true, disableTimer: true);
+                        }
+                      });
+                    },
+                    onTap: (Bell bell) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BellEditingPage(
+                            bell: bell,
                           ),
-                          child: const Text("Delete"),
-                          onPressed: () {
-                            dbHandler.deleteBell(bell).then((value) {
+                        ),
+                      ).then((value) {
+                        if (value != null) {
+                          dbHandler.updateBell(value).then((value) {
+                            setState(() {
                               _updateBells();
                             });
-                            Navigator.pop(context);
-                          },
-                        ),
-                        TextButton(
-                          style: ButtonStyle(
-                            foregroundColor: MaterialStateProperty.all<Color>(
-                                const Color(0xff53a679)),
-                            overlayColor: MaterialStateProperty.all<Color>(
-                                const Color(0xff53a679).withOpacity(0.1)),
-                          ),
-                          child: const Text("Cancel"),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                onEnabled: (Bell bell) {
-                  dbHandler
-                      .updateBell(bell..activateOnInit = !bell.activateOnInit)
-                      .then((value) {
-                    _updateBells();
-                  });
-                },
-                onDisabled: (Bell bell) {
-                  dbHandler
-                      .updateBell(bell..activateOnInit = !bell.activateOnInit)
-                      .then((value) {
-                    _updateBells();
-                  });
-                },
-                onPlay: (Bell bell) {
-                  if (!bell.activated) {
-                    bell.activateBell(force: true, disableTimer: true);
-                  }
-                  bell.playBell();
-                },
-                onStop: (Bell bell) {
-                  bell.stopBell().then((value) {
-                    if (!bell.activated) {
-                      bell.activateBell(force: true, disableTimer: true);
-                    }
-                  });
-                },
-                onTap: (Bell bell) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BellEditingPage(
-                        bell: bell,
-                      ),
-                    ),
-                  ).then((value) {
-                    if (value != null) {
-                      dbHandler.updateBell(value).then((value) {
-                        setState(() {
-                          _updateBells();
-                        });
+                          });
+                        }
                       });
-                    }
-                  });
-                },
-              ),
-          ],
-        ),
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

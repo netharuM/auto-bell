@@ -112,7 +112,7 @@ class _MyAppState extends State<MyApp> with WindowListener {
         primarySwatch: color,
         primaryColor: const Color(0xff53a679),
         scaffoldBackgroundColor: const Color(0xff21252b),
-        cardColor: const Color(0xFF282c34),
+        cardColor: const Color(0xFF282c34).withOpacity(0.9),
         switchTheme: SwitchThemeData(
           thumbColor: MaterialStateProperty.resolveWith((states) {
             return states.contains(MaterialState.selected)

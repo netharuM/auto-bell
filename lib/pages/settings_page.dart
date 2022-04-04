@@ -35,7 +35,7 @@ class SettingsPage extends StatelessWidget {
         ),
         body: const TabBarView(children: [
           // TODO: setup the other pages
-          Center(child: Text("Audio havent developed yet")),
+          Center(child: Text("Audio settings havent developed yet")),
           ApplicationSettingsPage(),
           InfoPage(),
         ]),
@@ -53,10 +53,10 @@ class InfoPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Icon(
-          Icons.info,
-          size: 120,
-          color: Colors.white,
+        const Flexible(
+          child: Image(
+            image: AssetImage('assets/icon.ico'),
+          ),
         ),
         const Text(
           'ICMU-autoBell',
@@ -127,6 +127,7 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
   late bool _launchOnStartup;
   late bool _preventClose;
   late bool _showNotifications;
+  late bool _showBG;
 
   @override
   void initState() {
@@ -134,6 +135,7 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
     _launchOnStartup = false;
     _preventClose = false;
     _showNotifications = false;
+    _showBG = false;
     _init();
   }
 
@@ -141,6 +143,7 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
     bool? launchOnStartup = await _settings.getLaunchOnStartup;
     bool? preventClose = await _settings.getPreventClose;
     bool? showNotifications = await _settings.getShowNotifications;
+    bool showBG = await _settings.getBGEnabled;
     if (launchOnStartup == null) {
       await _settings.setLaunchOnStartup(false);
       launchOnStartup = false;
@@ -153,6 +156,7 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
       _launchOnStartup = launchOnStartup!;
       _preventClose = preventClose!;
       _showNotifications = showNotifications!;
+      _showBG = showBG;
     });
   }
 
@@ -188,6 +192,16 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
               _showNotifications = value;
             });
             _settings.setShowNotifications(value);
+          },
+        ),
+        TickOption(
+          value: _showBG,
+          text: "show Back Ground Image",
+          onChanged: (bool value) {
+            setState(() {
+              _showBG = value;
+            });
+            _settings.setBGEnabled(value);
           },
         ),
       ],

@@ -19,6 +19,21 @@ class Settings {
   Future<bool?> get getShowNotifications async =>
       (await prefs).getBool('showNotifications');
 
+  Future<bool> get getBGEnabled async {
+    SharedPreferences _sharedPrefs = await prefs;
+    bool? bgEnabled = _sharedPrefs.getBool('BGEnabled');
+    if (bgEnabled == null) {
+      setBGEnabled(true);
+      return true;
+    }
+    return bgEnabled;
+  }
+
+  Future<void> setBGEnabled(bool value) async {
+    SharedPreferences sharedPrefs = await prefs;
+    sharedPrefs.setBool('BGEnabled', value);
+  }
+
   Future<void> setLaunchOnStartup(bool value) async {
     SharedPreferences sharedPrefs = await prefs;
     value ? launchAtStartup.enable() : launchAtStartup.disable();

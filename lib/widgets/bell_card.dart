@@ -1,5 +1,6 @@
 import 'package:auto_bell/models/bell.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class BellCard extends StatefulWidget {
   final Bell bell;
@@ -89,41 +90,67 @@ class _BellCardState extends State<BellCard> {
                       ? 'timer activated'
                       : 'timer is not active',
                   child: Container(
-                    width: 5,
+                    width: 130,
                     height: 50,
-                    margin: const EdgeInsets.only(left: 4, right: 22),
+                    // margin: const EdgeInsets.only(left: 4, right: 22),
                     decoration: BoxDecoration(
-                      color: _timerActivated
-                          ? const Color(0xff53a679)
-                          : Colors.grey,
+                      // color: _timerActivated
+                      //     ? const Color(0xff53a679)
+                      //     : Colors.transparent,
                       borderRadius: BorderRadius.circular(50),
+                      border: Border.all(
+                        color: _timerActivated
+                            ? const Color(0xff53a679)
+                            : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        DateFormat("HH:mm").format(widget.bell.dateTime),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: _timerActivated
+                              ? FontStyle.italic
+                              : FontStyle.normal,
+                          decoration: _timerActivated
+                              ? TextDecoration.none
+                              : TextDecoration.lineThrough,
+                          color: widget.bell.activateable
+                              ? Colors.white
+                              : Colors.grey,
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 // title and the description
                 Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        widget.bell.title ?? 'untitled',
-                        style: TextStyle(
-                          color: widget.bell.activateable
-                              ? Colors.white
-                              : Colors.grey,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                  child: Center(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.bell.title ?? 'untitled',
+                          style: TextStyle(
+                            color: widget.bell.activateable
+                                ? Colors.white
+                                : Colors.grey,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      Text(
-                        widget.bell.description ?? 'unknown description',
-                        style: TextStyle(
-                          color: widget.bell.activateable
-                              ? Colors.white
-                              : Colors.grey,
+                        Text(
+                          widget.bell.description ?? 'unknown description',
+                          style: TextStyle(
+                            color: widget.bell.activateable
+                                ? Colors.white
+                                : Colors.grey,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 // belll tools

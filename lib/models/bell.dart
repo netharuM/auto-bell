@@ -15,6 +15,7 @@ class Bell {
   bool activateOnInit;
   bool activated = false;
   Timer? countDown;
+  Timer? notifyDown;
   int id;
   Function()? onPlay;
   Function()? onStop;
@@ -71,15 +72,20 @@ class Bell {
         weekDay == "Saturday" ||
         weekDay == "Sunday") {
       if (!disableTimer) {
+        Duration playAt = dateTime.difference(DateTime.now());
         countDown = Timer(
-          dateTime.difference(DateTime.now()),
-          () => playBell(force: false),
+          playAt,
+          () {
+            if (!playAt.isNegative) {
+              playBell(force: false);
+            }
+          },
         );
         _settings.getShowNotifications.then((value) {
           if (value ?? true) {
             Duration ringAt = (dateTime.subtract(const Duration(minutes: 1)))
                 .difference(DateTime.now());
-            Timer(
+            notifyDown = Timer(
               ringAt,
               () {
                 if (!ringAt.isNegative) {
@@ -109,10 +115,12 @@ class Bell {
     return pathToAudio != null && time != null;
   }
 
-  bool get timerActive => countDown != null && countDown!.isActive;
+  bool get timerActive =>
+      countDown != null && !dateTime.difference(DateTime.now()).isNegative;
 
   void deactivateBell() {
     countDown?.cancel();
+    notifyDown?.cancel();
     stopBell();
   }
 
