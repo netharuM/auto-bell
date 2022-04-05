@@ -10,6 +10,7 @@ class BellCard extends StatefulWidget {
   final Function(Bell bell)? onEnabled;
   final Function(Bell bell)? onPlay;
   final Function(Bell bell)? onStop;
+  final bool disableActions;
   const BellCard({
     Key? key,
     this.onTap,
@@ -18,6 +19,7 @@ class BellCard extends StatefulWidget {
     this.onEnabled,
     this.onPlay,
     this.onStop,
+    this.disableActions = false,
     required this.bell,
   }) : super(key: key);
 
@@ -59,6 +61,7 @@ class _BellCardState extends State<BellCard> {
         _playing = false;
       });
     };
+    // TODO : Create a shaking animation and animate the BellCard when bells are reordering
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
       width: double.infinity,
@@ -73,154 +76,153 @@ class _BellCardState extends State<BellCard> {
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            if (widget.onTap != null) widget.onTap!(widget.bell);
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Tooltip(
-                  message: _timerActivated
-                      ? 'timer activated'
-                      : 'timer is not active',
-                  child: Container(
-                    width: 130,
-                    height: 50,
-                    // margin: const EdgeInsets.only(left: 4, right: 22),
-                    decoration: BoxDecoration(
-                      // color: _timerActivated
-                      //     ? const Color(0xff53a679)
-                      //     : Colors.transparent,
-                      borderRadius: BorderRadius.circular(50),
-                      border: Border.all(
-                        color: _timerActivated
-                            ? const Color(0xff53a679)
-                            : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        DateFormat("HH:mm").format(widget.bell.dateTime),
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontStyle: _timerActivated
-                              ? FontStyle.italic
-                              : FontStyle.normal,
-                          decoration: _timerActivated
-                              ? TextDecoration.none
-                              : TextDecoration.lineThrough,
-                          color: widget.bell.activateable
-                              ? Colors.white
-                              : Colors.grey,
+      child: IgnorePointer(
+        ignoring: widget.disableActions,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              if (widget.onTap != null) widget.onTap!(widget.bell);
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Tooltip(
+                    message: _timerActivated
+                        ? 'timer activated'
+                        : 'timer is not active',
+                    child: Container(
+                      width: 130,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(50),
+                        border: Border.all(
+                          color: _timerActivated
+                              ? const Color(0xff53a679)
+                              : Colors.transparent,
+                          width: 2,
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                // title and the description
-                Flexible(
-                  child: Center(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.bell.title ?? 'untitled',
+                      child: Center(
+                        child: Text(
+                          DateFormat("HH:mm").format(widget.bell.dateTime),
                           style: TextStyle(
-                            color: widget.bell.activateable
-                                ? Colors.white
-                                : Colors.grey,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          widget.bell.description ?? 'unknown description',
-                          style: TextStyle(
+                            fontStyle: _timerActivated
+                                ? FontStyle.italic
+                                : FontStyle.normal,
+                            decoration: _timerActivated
+                                ? TextDecoration.none
+                                : TextDecoration.lineThrough,
                             color: widget.bell.activateable
                                 ? Colors.white
                                 : Colors.grey,
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                // belll tools
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: _activated
-                          ? (_playing ? 'stop' : 'play')
-                          : 'disabled',
-                      onPressed: _activated
-                          ? (_playing
-                              ? () {
-                                  if (widget.onStop != null) {
-                                    widget.onStop!(widget.bell);
-                                  }
-                                }
-                              : () {
-                                  if (widget.onPlay != null) {
-                                    widget.onPlay!(widget.bell);
-                                  }
-                                })
-                          : () {},
-                      icon: Icon(_playing
-                          ? Icons.stop_rounded
-                          : Icons.play_arrow_rounded),
-                      color: _activated
-                          ? (_playing
-                              ? const Color(0xfff1a522)
-                              : const Color(0xff53a679))
-                          : Colors.grey,
+                  // title and the description
+                  Flexible(
+                    child: Center(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.bell.title ?? 'untitled',
+                            style: TextStyle(
+                              color: widget.bell.activateable
+                                  ? Colors.white
+                                  : Colors.grey,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            widget.bell.description ?? 'unknown description',
+                            style: TextStyle(
+                              color: widget.bell.activateable
+                                  ? Colors.white
+                                  : Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    IconButton(
-                      tooltip: widget.bell.activateable
-                          ? (_activated ? 'deactivate' : 'activate')
-                          : 'unable to activate',
-                      onPressed: widget.bell.activateable
-                          ? (_activated
-                              ? () {
-                                  if (widget.onDisabled != null) {
-                                    widget.onDisabled!(widget.bell);
+                  ),
+                  // belll tools
+                  Row(
+                    children: [
+                      IconButton(
+                        tooltip: _activated
+                            ? (_playing ? 'stop' : 'play')
+                            : 'disabled',
+                        onPressed: _activated
+                            ? (_playing
+                                ? () {
+                                    if (widget.onStop != null) {
+                                      widget.onStop!(widget.bell);
+                                    }
                                   }
-                                }
-                              : () {
-                                  if (widget.onEnabled != null) {
-                                    widget.onEnabled!(widget.bell);
+                                : () {
+                                    if (widget.onPlay != null) {
+                                      widget.onPlay!(widget.bell);
+                                    }
+                                  })
+                            : () {},
+                        icon: Icon(_playing
+                            ? Icons.stop_rounded
+                            : Icons.play_arrow_rounded),
+                        color: _activated
+                            ? (_playing
+                                ? const Color(0xfff1a522)
+                                : const Color(0xff53a679))
+                            : Colors.grey,
+                      ),
+                      IconButton(
+                        tooltip: widget.bell.activateable
+                            ? (_activated ? 'deactivate' : 'activate')
+                            : 'unable to activate',
+                        onPressed: widget.bell.activateable
+                            ? (_activated
+                                ? () {
+                                    if (widget.onDisabled != null) {
+                                      widget.onDisabled!(widget.bell);
+                                    }
                                   }
-                                })
-                          : () {},
-                      icon: Icon(_activated
-                          ? Icons.alarm_off_rounded
-                          : Icons.alarm_on_rounded),
-                      color: widget.bell.activateable
-                          ? (_activated
-                              ? const Color(0xffe5c07b)
-                              : const Color(0xff98c379))
-                          : Colors.grey,
-                    ),
-                    IconButton(
-                      tooltip: 'Delete',
-                      onPressed: () {
-                        if (widget.onDelete != null) {
-                          widget.onDelete!(widget.bell);
-                        }
-                      },
-                      icon: const Icon(Icons.delete),
-                      color: const Color(0xffff4473),
-                    ),
-                  ],
-                )
-              ],
+                                : () {
+                                    if (widget.onEnabled != null) {
+                                      widget.onEnabled!(widget.bell);
+                                    }
+                                  })
+                            : () {},
+                        icon: Icon(_activated
+                            ? Icons.alarm_off_rounded
+                            : Icons.alarm_on_rounded),
+                        color: widget.bell.activateable
+                            ? (_activated
+                                ? const Color(0xffe5c07b)
+                                : const Color(0xff98c379))
+                            : Colors.grey,
+                      ),
+                      IconButton(
+                        tooltip: 'Delete',
+                        onPressed: () {
+                          if (widget.onDelete != null) {
+                            widget.onDelete!(widget.bell);
+                          }
+                        },
+                        icon: const Icon(Icons.delete),
+                        color: const Color(0xffff4473),
+                      ),
+                    ],
+                  )
+                ],
+              ),
             ),
           ),
         ),

@@ -17,6 +17,7 @@ class Bell {
   Timer? countDown;
   Timer? notifyDown;
   int id;
+  int position;
   Function()? onPlay;
   Function()? onStop;
   Function()? onActivate;
@@ -38,6 +39,7 @@ class Bell {
     this.activateOnInit = false,
     this.pathToAudio,
     this.id = 0,
+    this.position = 0,
     this.onPlay,
     this.onStop,
   }) {
@@ -147,6 +149,7 @@ class Bell {
     Map<String, dynamic> map = {
       'time': DateFormat("HH:mm").format(dateTime),
       'title': title,
+      'position': position,
       'description': description,
       'pathToAudio': pathToAudio,
       'days': listToString ? days.toString() : days,
@@ -166,6 +169,7 @@ class Bell {
     id = map['id'];
     description = map['description'];
     pathToAudio = map['pathToAudio'];
+    position = map['position'];
     days =
         List<bool>.from(listAsStrings ? json.decode(map['days']) : map['days']);
     activateOnInit =

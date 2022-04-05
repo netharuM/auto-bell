@@ -17,12 +17,13 @@ class BellPage extends StatefulWidget {
 
 class _BellPageState extends State<BellPage> {
   List<Bell> bells = [];
-  DBHandler dbHandler = DBHandler.instance;
+  final DBHandler _dbHandler = DBHandler.instance;
   final Settings _settings = Settings.instance;
   bool _enableBG = true;
+  bool _changingOrder = false;
 
   void _updateBells() {
-    dbHandler.getBells().then((List<Map<String, dynamic>> value) {
+    _dbHandler.getBells().then((List<Map<String, dynamic>> value) {
       List<Bell> newBells = [];
       for (var bellData in value) {
         newBells.add(
@@ -36,6 +37,17 @@ class _BellPageState extends State<BellPage> {
         bells = newBells;
       });
     });
+  }
+
+  void _moveBell(int oldPosition, int newPosition) {
+    setState(() {
+      if (oldPosition < newPosition) {
+        newPosition -= 1;
+      }
+      final Bell bell = bells.removeAt(oldPosition);
+      bells.insert(newPosition, bell);
+    });
+    _dbHandler.moveBell(oldPosition, newPosition);
   }
 
   @override
@@ -61,26 +73,46 @@ class _BellPageState extends State<BellPage> {
         suffixTools: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            TextButton(
-              onPressed: () {
-                _refresh();
-              },
-              child: const Icon(Icons.refresh),
+            Tooltip(
+              message: _changingOrder ? 'save order' : 'reorder',
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _changingOrder = !_changingOrder;
+                  });
+                },
+                child: _changingOrder
+                    ? const Icon(Icons.check_circle)
+                    : const Icon(Icons.reorder),
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsPage(),
-                  ),
-                ).then((value) => _refresh(settingsOnly: true));
-              },
-              child: const Icon(Icons.settings),
-              style: ButtonStyle(
-                foregroundColor: MaterialStateProperty.all<Color>(Colors.grey),
-                overlayColor: MaterialStateProperty.all<Color>(
-                    Colors.grey.withOpacity(0.1)),
+            Tooltip(
+              message: 'refresh',
+              child: TextButton(
+                onPressed: () {
+                  _refresh();
+                },
+                child: const Icon(Icons.refresh),
+              ),
+            ),
+            Tooltip(
+              message: 'settings',
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsPage(),
+                    ),
+                  ).then((value) => _refresh(settingsOnly: true));
+                },
+                child: const Icon(Icons.settings),
+                style: ButtonStyle(
+                  foregroundColor:
+                      MaterialStateProperty.all<Color>(Colors.grey),
+                  overlayColor: MaterialStateProperty.all<Color>(
+                      Colors.grey.withOpacity(0.1)),
+                ),
               ),
             ),
           ],
@@ -96,8 +128,9 @@ class _BellPageState extends State<BellPage> {
               builder: (context) => const AddNewBellPage(),
             ),
           ).then((bell) {
+            bell.position = bells.length;
             if (bell != null) {
-              dbHandler.insertBell(bell).then((bellId) {
+              _dbHandler.insertBell(bell).then((bellId) {
                 setState(() {
                   _updateBells();
                 });
@@ -110,7 +143,7 @@ class _BellPageState extends State<BellPage> {
                   ),
                 ).then((value) {
                   if (value != null) {
-                    dbHandler.updateBell(value).then((value) {
+                    _dbHandler.updateBell(value).then((value) {
                       setState(() {
                         _updateBells();
                       });
@@ -137,104 +170,146 @@ class _BellPageState extends State<BellPage> {
             ),
           ),
           Scrollbar(
-            child: ListView(
-              padding: const EdgeInsets.all(8),
-              children: [
-                for (int i = 0; i < bells.length; i++)
-                  BellCard(
-                    bell: bells[i],
-                    onDelete: (Bell bell) async {
-                      await showDialog(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          elevation: 2,
-                          backgroundColor: const Color(0xff21252b),
-                          title: const Text("Delete that Bell?"),
-                          content: const Text(
-                              "Are you sure you want to delete that bell?"),
-                          actions: <Widget>[
-                            TextButton(
-                              style: ButtonStyle(
-                                foregroundColor:
-                                    MaterialStateProperty.all<Color>(
-                                        const Color(0xffff4473)),
-                                overlayColor: MaterialStateProperty.all<Color>(
-                                    const Color(0xffff4473).withOpacity(0.1)),
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                canvasColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+              ),
+              child: ReorderableListView(
+                padding: const EdgeInsets.all(8),
+                onReorder: (int oldIndex, int newIndex) {
+                  debugPrint("Reordered $oldIndex to $newIndex");
+                  _moveBell(oldIndex, newIndex);
+                },
+                proxyDecorator: (
+                  Widget child,
+                  int index,
+                  Animation<double> animation,
+                ) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: child,
+                  );
+                },
+                buildDefaultDragHandles: false,
+                children: [
+                  for (int i = 0; i < bells.length; i++)
+                    ReorderableDragStartListener(
+                      enabled: _changingOrder,
+                      index: i,
+                      key: ValueKey(bells[i].id),
+                      child: BellCard(
+                        bell: bells[i],
+                        disableActions: _changingOrder,
+                        onDelete: (Bell bell) async {
+                          await showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              elevation: 2,
+                              backgroundColor: const Color(0xff21252b),
+                              title: const Text("Delete that Bell?"),
+                              content: const Text(
+                                  "Are you sure you want to delete that bell?"),
+                              actions: <Widget>[
+                                TextButton(
+                                  style: ButtonStyle(
+                                    foregroundColor:
+                                        MaterialStateProperty.all<Color>(
+                                            const Color(0xffff4473)),
+                                    overlayColor:
+                                        MaterialStateProperty.all<Color>(
+                                            const Color(0xffff4473)
+                                                .withOpacity(0.1)),
+                                  ),
+                                  child: const Text("Delete"),
+                                  onPressed: () {
+                                    _dbHandler.deleteBell(bell).then((value) {
+                                      _updateBells();
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                                TextButton(
+                                  style: ButtonStyle(
+                                    foregroundColor:
+                                        MaterialStateProperty.all<Color>(
+                                            const Color(0xff53a679)),
+                                    overlayColor:
+                                        MaterialStateProperty.all<Color>(
+                                            const Color(0xff53a679)
+                                                .withOpacity(0.1)),
+                                  ),
+                                  child: const Text("Cancel"),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        onEnabled: (Bell bell) {
+                          _dbHandler
+                              .updateBell(
+                                  bell..activateOnInit = !bell.activateOnInit)
+                              .then((value) {
+                            _updateBells();
+                          });
+                        },
+                        onDisabled: (Bell bell) {
+                          _dbHandler
+                              .updateBell(
+                                  bell..activateOnInit = !bell.activateOnInit)
+                              .then((value) {
+                            _updateBells();
+                          });
+                        },
+                        onPlay: (Bell bell) {
+                          if (!bell.activated) {
+                            bell.activateBell(force: true, disableTimer: true);
+                          }
+                          bell.playBell();
+                        },
+                        onStop: (Bell bell) {
+                          bell.stopBell().then((value) {
+                            if (!bell.activated) {
+                              bell.activateBell(
+                                  force: true, disableTimer: true);
+                            }
+                          });
+                        },
+                        onTap: (Bell bell) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BellEditingPage(
+                                bell: bell,
                               ),
-                              child: const Text("Delete"),
-                              onPressed: () {
-                                dbHandler.deleteBell(bell).then((value) {
+                            ),
+                          ).then((value) {
+                            if (value != null) {
+                              _dbHandler.updateBell(value).then((value) {
+                                setState(() {
                                   _updateBells();
                                 });
-                                Navigator.pop(context);
-                              },
-                            ),
-                            TextButton(
-                              style: ButtonStyle(
-                                foregroundColor:
-                                    MaterialStateProperty.all<Color>(
-                                        const Color(0xff53a679)),
-                                overlayColor: MaterialStateProperty.all<Color>(
-                                    const Color(0xff53a679).withOpacity(0.1)),
-                              ),
-                              child: const Text("Cancel"),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    onEnabled: (Bell bell) {
-                      dbHandler
-                          .updateBell(
-                              bell..activateOnInit = !bell.activateOnInit)
-                          .then((value) {
-                        _updateBells();
-                      });
-                    },
-                    onDisabled: (Bell bell) {
-                      dbHandler
-                          .updateBell(
-                              bell..activateOnInit = !bell.activateOnInit)
-                          .then((value) {
-                        _updateBells();
-                      });
-                    },
-                    onPlay: (Bell bell) {
-                      if (!bell.activated) {
-                        bell.activateBell(force: true, disableTimer: true);
-                      }
-                      bell.playBell();
-                    },
-                    onStop: (Bell bell) {
-                      bell.stopBell().then((value) {
-                        if (!bell.activated) {
-                          bell.activateBell(force: true, disableTimer: true);
-                        }
-                      });
-                    },
-                    onTap: (Bell bell) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BellEditingPage(
-                            bell: bell,
-                          ),
-                        ),
-                      ).then((value) {
-                        if (value != null) {
-                          dbHandler.updateBell(value).then((value) {
-                            setState(() {
-                              _updateBells();
-                            });
+                              });
+                            }
                           });
-                        }
-                      });
-                    },
-                  ),
-              ],
+                        },
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],

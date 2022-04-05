@@ -26,6 +26,7 @@ class DBHandler {
     await db.execute('''
       CREATE TABLE bells (
         id INTEGER PRIMARY KEY,
+        position INTEGER NOT NULL,
         time TEXT,
         title TEXT,
         description TEXT,
@@ -38,7 +39,12 @@ class DBHandler {
 
   Future<List<Map<String, dynamic>>> getBells() async {
     final Database db = await database;
-    return await db.query('bells');
+    List<Map<String, dynamic>> map = [
+      ...await db.query('bells')
+    ]; // why its in an array is because we have to create a clone of it in order to modify it
+    // (modifying it in the sorting function)
+    map.sort((a, b) => a['position'].compareTo(b['position']));
+    return map;
   }
 
   Future<int> insertBell(Bell bell) async {
@@ -56,10 +62,45 @@ class DBHandler {
         where: 'id = ?', whereArgs: [bell.id]);
   }
 
+  Future<void> moveBell(int prevPos, int newPos) async {
+    List<Map<String, dynamic>> bellMaps = await getBells();
+    prevPos = bellMaps[prevPos]['position'];
+    newPos = bellMaps[newPos]['position'];
+    List<int> indexArray = [];
+    for (int i = 0; i < bellMaps.length; i++) {
+      indexArray.add(bellMaps[i]['position']);
+    }
+
+    int prevIndex = indexArray.indexOf(prevPos);
+    indexArray.removeAt(prevIndex);
+    indexArray.insert(newPos, prevPos);
+
+    for (int i = 0; i < indexArray.length; i++) {
+      Bell newbell = Bell()
+        ..fromMap(bellMaps[indexArray[i]],
+            intAsBool: true, listAsStrings: true);
+      newbell.position = bellMaps[i]['position'];
+      await updateBell(newbell);
+    }
+  }
+
+  Future<void> fixTasksPosition() async {
+    List<Map<String, dynamic>> bellsMap = await getBells();
+    for (var i = 0; i < bellsMap.length; i++) {
+      Bell fixedBell = Bell()
+        ..fromMap(bellsMap[i], intAsBool: true, listAsStrings: true);
+      fixedBell.position = i;
+      await updateBell(fixedBell);
+    }
+  }
+
   Future<int> deleteBell(Bell bell) async {
     final Database db = await database;
     bell.deactivateBell();
     bell.dispose();
-    return await db.delete('bells', where: 'id = ?', whereArgs: [bell.id]);
+    int deletedId =
+        await db.delete('bells', where: 'id = ?', whereArgs: [bell.id]);
+    fixTasksPosition();
+    return deletedId;
   }
 }

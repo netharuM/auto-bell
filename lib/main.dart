@@ -81,8 +81,7 @@ class _MyAppState extends State<MyApp> with WindowListener {
   Future<void> initSystemTray() async {
     String path = Platform.isWindows ? 'assets/icon.ico' : 'assets/icon.png';
 
-    await _systemTray.initSystemTray(
-        title: 'system tray title', iconPath: path);
+    await _systemTray.initSystemTray(title: 'icmu-autobell', iconPath: path);
 
     _menuItems = [
       MenuItem(label: 'show', onClicked: showWindow),
