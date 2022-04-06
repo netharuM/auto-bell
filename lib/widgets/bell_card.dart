@@ -254,7 +254,13 @@ class _TimerActiveIndicatorState extends State<TimerActiveIndicator>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.timerActivated) _controller.repeat(reverse: true);
+    if (widget.timerActivated) {
+      _controller.repeat(reverse: true);
+    } else {
+      _controller.reverse().then((value) {
+        _controller.stop();
+      });
+    }
     return Tooltip(
       message:
           widget.timerActivated ? 'timer activated' : 'timer is not active',
