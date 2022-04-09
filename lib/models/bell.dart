@@ -21,7 +21,7 @@ class Bell {
   Function()? onPlay;
   Function()? onStop;
   Function()? onActivate;
-  final AudioPlayer audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   final LocalNotifier _localNotifier = LocalNotifier.instance;
   final Settings _settings = Settings.instance;
 
@@ -46,9 +46,9 @@ class Bell {
     if (activateOnInit) activateBell();
   }
 
-  void dispose() {
-    deactivateBell();
-    audioPlayer.dispose();
+  Future<void> dispose() async {
+    await deactivateBell();
+    await _audioPlayer.dispose();
   }
 
   Future<void> notify() async {
@@ -98,11 +98,11 @@ class Bell {
           }
         });
       }
-      audioPlayer.setFilePath(pathToAudio!);
-      audioPlayer.setLoopMode(LoopMode.off);
-      audioPlayer.playerStateStream.listen((state) {
+      _audioPlayer.setFilePath(pathToAudio!);
+      _audioPlayer.setLoopMode(LoopMode.off);
+      _audioPlayer.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
-          onStop!();
+          if (onStop != null) onStop!();
         }
       });
       activated = true;
@@ -120,10 +120,10 @@ class Bell {
   bool get timerActive =>
       countDown != null && !dateTime.difference(DateTime.now()).isNegative;
 
-  void deactivateBell() {
+  Future<void> deactivateBell() async {
     countDown?.cancel();
     notifyDown?.cancel();
-    stopBell();
+    await stopBell();
   }
 
   Future<void> playBell({bool force = true}) async {
@@ -133,14 +133,14 @@ class Bell {
       if (!activated) {
         activateBell(force: true, disableTimer: true);
       }
-      await audioPlayer.play();
+      await _audioPlayer.play();
       if (onPlay != null) onPlay!();
     }
   }
 
   Future<void> stopBell() async {
     if (onStop != null) onStop!();
-    await audioPlayer.stop();
+    await _audioPlayer.stop();
     activated = false;
   }
 
@@ -160,7 +160,9 @@ class Bell {
   }
 
   void fromMap(Map<String, dynamic> map,
-      {bool intAsBool = false, listAsStrings = false}) {
+      {bool intAsBool = false,
+      listAsStrings = false,
+      disableActivation = false}) {
     time = TimeOfDay(
       hour: int.parse(map['time'].split(':')[0]),
       minute: int.parse(map['time'].split(':')[1]),
@@ -174,6 +176,6 @@ class Bell {
         List<bool>.from(listAsStrings ? json.decode(map['days']) : map['days']);
     activateOnInit =
         intAsBool ? (map['activate'] == 0 ? false : true) : map['activate'];
-    if (activateOnInit) activateBell();
+    if (activateOnInit && !disableActivation) activateBell();
   }
 }

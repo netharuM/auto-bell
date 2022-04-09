@@ -48,10 +48,7 @@ class _BellPageState extends State<BellPage> {
       final Bell bell = bells.removeAt(oldPosition);
       bells.insert(newPosition, bell);
     });
-    // "just_audio" gives an error when trying to dispose bells while bellCard is shaking
-    // so we disable the option "disposeBell" to disable bell being disposed
-    // and we will dispose them later when user hits that checkIcon in the title bar (while bells are not shaking)
-    _dbHandler.moveBell(oldPosition, newPosition, disposeBell: false);
+    _dbHandler.moveBell(oldPosition, newPosition);
   }
 
   @override

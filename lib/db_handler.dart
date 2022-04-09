@@ -56,10 +56,9 @@ class DBHandler {
   ///
   /// @param deactivate - enable or disable the process of deactivating bell when updating
   ///
-  Future<int> updateBell(Bell bell, {bool deactivate = true}) async {
+  Future<int> updateBell(Bell bell, {bool dispose = true}) async {
     final Database db = await database;
-    if (deactivate) {
-      bell.deactivateBell();
+    if (dispose) {
       bell.dispose();
     }
     return await db.update(
@@ -67,8 +66,7 @@ class DBHandler {
         where: 'id = ?', whereArgs: [bell.id]);
   }
 
-  Future<void> moveBell(int prevPos, int newPos,
-      {bool disposeBell = true}) async {
+  Future<void> moveBell(int prevPos, int newPos) async {
     List<Map<String, dynamic>> bellMaps = await getBells();
     prevPos = bellMaps[prevPos]['position'];
     newPos = bellMaps[newPos]['position'];
@@ -84,9 +82,9 @@ class DBHandler {
     for (int i = 0; i < indexArray.length; i++) {
       Bell newbell = Bell()
         ..fromMap(bellMaps[indexArray[i]],
-            intAsBool: true, listAsStrings: true);
+            intAsBool: true, listAsStrings: true, disableActivation: true);
       newbell.position = bellMaps[i]['position'];
-      await updateBell(newbell, deactivate: disposeBell);
+      await updateBell(newbell);
     }
   }
 
