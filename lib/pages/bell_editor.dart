@@ -186,7 +186,7 @@ class _BellEditingPageState extends State<BellEditingPage> {
               ),
               Row(
                 children: [
-                  ElevatedButton(
+                  ElevatedButton.icon(
                     onPressed: () async {
                       FilePickerResult? result = await FilePicker.platform
                           .pickFiles(type: FileType.audio);
@@ -197,12 +197,14 @@ class _BellEditingPageState extends State<BellEditingPage> {
                         });
                       }
                     },
-                    child: const Text("Pick a new audio"),
+                    icon: const Icon(Icons.audiotrack_rounded),
+                    label: const Text("Pick a new audio"),
                   ),
                   Flexible(
-                    child: TextButton(
+                    child: TextButton.icon(
                       onPressed: () {},
-                      child: Text(_audioPath ?? "No audio selected"),
+                      icon: const Icon(Icons.audio_file_outlined),
+                      label: Text(_audioPath ?? "No audio selected"),
                     ),
                   ),
                 ],

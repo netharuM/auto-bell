@@ -132,8 +132,8 @@ class _BellPageState extends State<BellPage> {
               builder: (context) => const AddNewBellPage(),
             ),
           ).then((bell) {
-            bell.position = bells.length;
             if (bell != null) {
+              bell.position = bells.length;
               _dbHandler.insertBell(bell).then((bellId) {
                 setState(() {
                   _updateBells();

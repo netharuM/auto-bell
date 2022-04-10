@@ -83,29 +83,32 @@ class InfoPage extends StatelessWidget {
               "Links : ",
               style: TextStyle(color: Colors.grey),
             ),
-            TextButton(
+            TextButton.icon(
               onPressed: () async {
                 if (!await launch('https://github.com/netharuM')) {
                   throw 'Could not launch github';
                 }
               },
-              child: const Text('Github'),
+              icon: const Icon(Icons.person),
+              label: const Text('Github'),
             ),
-            TextButton(
+            TextButton.icon(
               onPressed: () async {
                 if (!await launch('https://instagram.com/netharuM')) {
                   throw 'Could not launch instagram';
                 }
               },
-              child: const Text('Instagram'),
+              icon: const Icon(Icons.camera_enhance_rounded),
+              label: const Text('Instagram'),
             ),
-            TextButton(
+            TextButton.icon(
               onPressed: () async {
                 if (!await launch('https://github.com/netharuM/auto-bell')) {
                   throw 'Could not launch Source Code';
                 }
               },
-              child: const Text('Source Code'),
+              icon: const Icon(Icons.code),
+              label: const Text('Source Code'),
             )
           ],
         )
@@ -165,6 +168,9 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
     return Column(
       children: [
         TickOption(
+          icon: _launchOnStartup
+              ? Icons.rocket_launch_rounded
+              : Icons.do_not_disturb_alt_outlined,
           value: _launchOnStartup,
           text: "Launch on startup",
           onChanged: (bool value) {
@@ -176,6 +182,9 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
         ),
         TickOption(
           value: _preventClose,
+          icon: _preventClose
+              ? Icons.do_not_disturb_on_total_silence_rounded
+              : Icons.close,
           text: "prevent close",
           onChanged: (bool value) {
             setState(() {
@@ -185,6 +194,9 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
           },
         ),
         TickOption(
+          icon: _showNotifications
+              ? Icons.notifications
+              : Icons.notifications_off,
           value: _showNotifications,
           text: "show notifications",
           onChanged: (bool value) {
@@ -195,6 +207,7 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
           },
         ),
         TickOption(
+          icon: _showBG ? Icons.image : Icons.image_not_supported,
           value: _showBG,
           text: "show Back Ground Image",
           onChanged: (bool value) {
@@ -212,12 +225,14 @@ class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
 class TickOption extends StatelessWidget {
   final bool value;
   final String text;
+  final IconData? icon;
   final void Function(bool) onChanged;
   const TickOption(
       {Key? key,
       required this.value,
       required this.onChanged,
-      required this.text})
+      required this.text,
+      this.icon})
       : super(key: key);
 
   @override
@@ -232,7 +247,18 @@ class TickOption extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(left: 10),
-                child: Text(text),
+                child: Row(
+                  children: [
+                    Visibility(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child:
+                              Icon(icon, color: Theme.of(context).primaryColor),
+                        ),
+                        visible: icon != null),
+                    Text(text),
+                  ],
+                ),
               ),
             ),
             Switch(

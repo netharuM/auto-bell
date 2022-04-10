@@ -149,9 +149,11 @@ class _BellCardState extends State<BellCard> {
                                       }
                                     })
                               : () {},
-                          icon: Icon(_playing
-                              ? Icons.stop_rounded
-                              : Icons.play_arrow_rounded),
+                          icon: _activated
+                              ? Icon(_playing
+                                  ? Icons.stop_rounded
+                                  : Icons.play_arrow_rounded)
+                              : const Icon(Icons.play_disabled_outlined),
                           color: _activated
                               ? (_playing
                                   ? const Color(0xfff1a522)
