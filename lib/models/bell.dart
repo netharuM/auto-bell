@@ -111,6 +111,7 @@ class Bell {
     if (activateOnInit) activateBell();
   }
 
+  /// returns the errors if there are any
   Future<BellErrors> get getErrors async {
     BellErrors bellErrors = BellErrors(parent: this);
     if (pathToAudio != null) {
@@ -130,11 +131,13 @@ class Bell {
     return bellErrors;
   }
 
+  /// disposes the [Bell]
   Future<void> dispose() async {
     await deactivateBell();
     await _audioPlayer.dispose();
   }
 
+  /// displays a notification
   Future<void> notify() async {
     LocalNotification notification = LocalNotification(
       title: "icmu-autobell",
@@ -145,15 +148,25 @@ class Bell {
     await _localNotifier.notify(notification);
   }
 
-  Future<void> activateBell(
-      {bool force = false, bool disableTimer = false}) async {
+  /// activating the bell before playing
+  ///
+  /// this will look at the week days before activating
+  ///
+  /// so if you wanna force the activation set
+  ///  - @param force to [true] its [false] by default
+  ///  - @param disableTimer - disables the activation of the timer
+  Future<void> activateBell({
+    bool force = false,
+    bool disableTimer = false,
+  }) async {
     assert(time != null);
     assert(pathToAudio != null);
     if ((await getErrors).isThereErrors) {
-      debugPrint('there are errors so not activating bell : "$title"');
+      debugPrint('there are errors so not activating the bell : "$title"');
       return;
     }
     String weekDay = DateFormat.EEEE().format(DateTime.now());
+    // checks the week days
     if (force ||
         weekDay == "Monday" && days[0] ||
         weekDay == "Tuesday" && days[1] ||
@@ -198,24 +211,29 @@ class Bell {
     }
   }
 
+  /// [time] in [DateTime] format
   get dateTime => DateTime(DateTime.now().year, DateTime.now().month,
       DateTime.now().day, time!.hour, time!.minute);
 
+  /// returns [true] if the bell is activateable and [false] if its not
   Future<bool> get activateable async {
     return pathToAudio != null &&
         time != null &&
         !(await getErrors).isThereErrors;
   }
 
+  /// returns [true] if timer is active and [false] if its not
   bool get timerActive =>
       countDown != null && !dateTime.difference(DateTime.now()).isNegative;
 
+  /// deactivates the [Bell] including notifications and countdowns
   Future<void> deactivateBell() async {
     countDown?.cancel();
     notifyDown?.cancel();
     await stopBell();
   }
 
+  /// plays the [Bell] it will activate the [Bell] if its not already activated
   Future<void> playBell({bool force = true}) async {
     if (force ||
         time?.minute == DateTime.now().minute &&
@@ -228,12 +246,22 @@ class Bell {
     }
   }
 
+  /// stops the [Bell]
   Future<void> stopBell() async {
     if (onStop != null) onStop!();
     await _audioPlayer.stop();
     activated = false;
   }
 
+  /// converts to a [Map]
+  /// format :
+  ///  - 'time' - time in "HH:mm" [DateFormat]
+  ///  - 'title' - title of the [Bell]
+  ///  - 'position' - position or the order of the [Bell]
+  ///  - 'description' - description of the [Bell]
+  ///  - 'pathToAudio' - the audio path of the [Bell]
+  ///  - 'days' - weekdays list
+  ///  - 'activate' - whether to activate on init or not
   Map<String, dynamic> toMap(
       {bool boolToInt = false, bool listToString = false, noId = true}) {
     Map<String, dynamic> map = {
@@ -249,6 +277,14 @@ class Bell {
     return map;
   }
 
+  /// setup args need for this [Bell] from a [Map]
+  ///  - 'time' - time in "HH:mm" [DateFormat]
+  ///  - 'title' - title of the [Bell]
+  ///  - 'position' - position or the order of the [Bell]
+  ///  - 'description' - description of the [Bell]
+  ///  - 'pathToAudio' - the audio path of the [Bell]
+  ///  - 'days' - weekdays list
+  ///  - 'activate' - whether to activate on init or not
   void fromMap(Map<String, dynamic> map,
       {bool intAsBool = false,
       listAsStrings = false,
