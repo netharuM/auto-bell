@@ -6,11 +6,14 @@ import 'package:path/path.dart';
 
 class DBHandler {
   DBHandler._init();
+
+  /// instance of the [DBHandler]
   static final DBHandler instance = DBHandler._init();
 
   static Database? _database;
   Future<Database> get database async => _database ??= await _initDB();
 
+  /// initializes the [Database]
   Future<Database> _initDB() async {
     sqfliteFfiInit();
     String pathToDb = await getApplicationDocumentsDirectory().then((dir) {
@@ -22,6 +25,7 @@ class DBHandler {
     );
   }
 
+  /// this will execute a sql commands to create the databases
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE bells (
@@ -37,6 +41,8 @@ class DBHandler {
     ''');
   }
 
+  /// returns bells as a [List] of [Map]s `List<Map<String, dynamic>>`
+  /// - this also sorts the bells by there position or order
   Future<List<Map<String, dynamic>>> getBells() async {
     final Database db = await database;
     List<Map<String, dynamic>> map = [
@@ -47,14 +53,20 @@ class DBHandler {
     return map;
   }
 
+  /// inserts a [Bell] into the database
   Future<int> insertBell(Bell bell) async {
     final Database db = await database;
     return await db.insert(
         'bells', bell.toMap(boolToInt: true, listToString: true));
   }
 
-  ///
-  /// @param deactivate - enable or disable the process of deactivating bell when updating
+  /// updates a bell in the dataBase
+  ///  - [bell] - a bell with updated parameters make sure that `id` is available in the bell
+  ///   - lets say you wanna update the title of a bell
+  ///     - ```dart
+  ///     updateBell(someBell..title = "someNewTitle");
+  ///     ```
+  ///  - [dispose] - enable or disable the process of deactivating bell when updating
   ///
   Future<int> updateBell(Bell bell, {bool dispose = true}) async {
     final Database db = await database;
@@ -66,6 +78,7 @@ class DBHandler {
         where: 'id = ?', whereArgs: [bell.id]);
   }
 
+  /// moves a bell from a [prevPos] to a [newPos] in the dataBase
   Future<void> moveBell(int prevPos, int newPos) async {
     List<Map<String, dynamic>> bellMaps = await getBells();
     prevPos = bellMaps[prevPos]['position'];
@@ -88,6 +101,13 @@ class DBHandler {
     }
   }
 
+  /// fixes the messed up bell positions
+  ///
+  /// when you delete a bell bell there are gaps between bell positions - `[0,1,2,4,5]`
+  ///
+  /// `3` is missing
+  ///
+  /// this will fix the bell positions to `[0,1,2,3,4]`
   Future<void> fixBellPositions() async {
     List<Map<String, dynamic>> bellsMap = await getBells();
     for (var i = 0; i < bellsMap.length; i++) {
@@ -98,6 +118,7 @@ class DBHandler {
     }
   }
 
+  /// deletes a [Bell]
   Future<int> deleteBell(Bell bell) async {
     final Database db = await database;
     bell.deactivateBell();

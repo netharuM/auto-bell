@@ -15,12 +15,14 @@ class _AddNewBellPageState extends State<AddNewBellPage> {
   bool _filled = false;
   TimeOfDay? _time;
 
+  /// returns [true] if every parameter is filled
   bool _checkFilled() {
     if (_titleController.text == "") return false;
     if (_time == null) return false;
     return true;
   }
 
+  /// looking for ability to save
   void _checkForSave() {
     setState(() {
       _filled = _checkFilled();
@@ -76,7 +78,7 @@ class _AddNewBellPageState extends State<AddNewBellPage> {
                 ),
                 Expanded(
                   child: TextField(
-                    onChanged: (value) {
+                    onChanged: (_) {
                       _checkForSave();
                     },
                     decoration: const InputDecoration(
@@ -99,7 +101,7 @@ class _AddNewBellPageState extends State<AddNewBellPage> {
             ),
             Expanded(
               child: TextField(
-                onChanged: (value) {
+                onChanged: (_) {
                   _checkForSave();
                 },
                 decoration: const InputDecoration(

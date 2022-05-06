@@ -2,16 +2,45 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
+/// titleBar of the application this contains the `close`,`minimize` and `resize` buttons and
+/// also this has ability to drag the window
 class TitleBar extends StatelessWidget implements PreferredSizeWidget {
+  /// [title] of the [TitleBar]
   final String? title;
+
+  /// background [Color]
   final Color? backgroundColor;
+
+  /// [Color] of the close button
   final Color? closeButtonColor;
+
+  /// text [Color]
   final Color? textColor;
+
+  /// color of the buttons
   final Color? buttonColor;
+
+  /// background [Color]  around the three buttons (`close`,`minimize` and `resize`)
   final Color? windowButtonBGColor;
+
+  /// style of the close button (`x` button)
   final ButtonStyle? closeButtonStyle;
+
+  /// you can add widget before the three buttons with this [suffixTools]
   final Widget? suffixTools;
+
+  /// widget that is below the title bar
+  /// like a navigation bar or something
+  /// you can add any [Widget] to here
   final Widget? bottom;
+
+  /// size of the [TitleBar]
+  /// its better if you use [Height]
+  ///
+  /// by default its
+  /// ```dart
+  /// const Size.fromHeight(28)
+  /// ```
   final Size customPrefferedSize;
   const TitleBar(
       {Key? key,
@@ -103,9 +132,19 @@ class TitleBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 class WindowButtons extends StatelessWidget {
+  /// color of the buttons
   final Color? buttonColor;
+
+  /// color of the close button
   final Color? closeButtonColor;
+
+  /// background color
   final Color? backgroundColor;
+
+  /// #### close button style
+  /// if the [closeButtonStyle] is not [null]
+  ///
+  /// then it will ignore the [closeButtonColor]
   final ButtonStyle? closeButtonStyle;
   const WindowButtons(
       {Key? key,

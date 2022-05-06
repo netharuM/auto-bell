@@ -25,6 +25,7 @@ class BellErrorExtended {
 
   @override
   bool operator ==(dynamic other) {
+    if (runtimeType != other.runtimeType) return false;
     return error == other.error;
   }
 }
@@ -153,8 +154,8 @@ class Bell {
   /// this will look at the week days before activating
   ///
   /// so if you wanna force the activation set
-  ///  - @param force to [true] its [false] by default
-  ///  - @param disableTimer - disables the activation of the timer
+  ///  - @param [force] to [true] its [false] by default
+  ///  - @param [disableTimer] - disables the activation of the timer
   Future<void> activateBell({
     bool force = false,
     bool disableTimer = false,

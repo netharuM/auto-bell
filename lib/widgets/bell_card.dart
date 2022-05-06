@@ -55,6 +55,7 @@ class _BellCardState extends State<BellCard> {
     checkForErrors();
   }
 
+  /// checking for [BellErrors]
   Future<void> checkForErrors() async {
     bool activateable = await widget.bell.activateable;
     if (activateable == false) {
@@ -230,11 +231,21 @@ class _BellCardState extends State<BellCard> {
   }
 }
 
-/// a widget that animates the border of the timer to blink in order to indicate that the bell timer has been activated
+/// a [Widget] that animates the border of the timer to blink in order to indicate that the bell timer has been activated
+/// or to indicate that there are [BellErrors]
 class TimerActiveIndicator extends StatefulWidget {
+  /// is timer activated
   final bool timerActivated;
+
+  /// can bell activated
   final bool activateable;
+
+  /// [DateTime] of the time which bell is gonna ring at
   final DateTime dateTime;
+
+  /// [BellErrors] if there is any [BellErrors]
+  ///  - it will change the [TimerActiveIndicator] [Color] to `Color(0xff53a679)` (red)
+  ///  - and it will let the user tap on it and see what are the [BellErrors]
   final BellErrors? bellErrors;
   const TimerActiveIndicator({
     Key? key,
@@ -273,6 +284,7 @@ class _TimerActiveIndicatorState extends State<TimerActiveIndicator>
 
     if (widget.activateable ||
         (widget.bellErrors == null || !widget.bellErrors!.isThereErrors)) {
+      // where there are no Bell Errors
       return Tooltip(
         message:
             widget.timerActivated ? 'timer activated' : 'timer is not active',
@@ -321,6 +333,7 @@ class _TimerActiveIndicatorState extends State<TimerActiveIndicator>
         ),
       );
     } else {
+      // whern there are bell errors
       return Tooltip(
         message: 'there are errors click to see them',
         child: InkWell(
@@ -385,9 +398,9 @@ class _TimerActiveIndicatorState extends State<TimerActiveIndicator>
   }
 }
 
-/// this will shake the child component
-/// designed to indicate that the child widget is draggable
-/// like in the IOS apps start to shake when dragging
+/// this will shake the child [Widget]
+/// designed to indicate that the child [Widget] is draggable
+/// like in the IOS, apps starts to shake when dragging
 class ShakeWidget extends StatefulWidget {
   final Widget child;
   final bool shake;
@@ -421,6 +434,8 @@ class _ShakeWidgetState extends State<ShakeWidget>
 
   @override
   Widget build(BuildContext context) {
+    /// picking a random point to start the animation
+    /// so bellCards wont shake at the same time
     int random(min, max) {
       return min + Random().nextInt(max - min);
     }

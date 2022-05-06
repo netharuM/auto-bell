@@ -16,12 +16,23 @@ class BellEditingPage extends StatefulWidget {
 class _BellEditingPageState extends State<BellEditingPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
+
+  /// if anything has changed
   bool _changed = false;
+
+  /// whether everything is filled or not
   bool _filled = true;
+
+  /// time of the [Bell]
   late TimeOfDay? _time;
+
+  /// list of weekDays
   late List<bool> _days;
+
+  /// audio path of the [Bell]
   String? _audioPath;
 
+  /// returns [true] if every necessary is filled other wise [false]
   bool _checkFilled() {
     if (_titleController.text == "") return false;
     if (_time == null) return false;
@@ -40,6 +51,7 @@ class _BellEditingPageState extends State<BellEditingPage> {
     super.initState();
   }
 
+  /// returns [true] if any parameter has changed otherwise [false]
   bool _checkChanged() {
     if (_titleController.text != (widget.bell.title ?? "")) return true;
     if (_descController.text != (widget.bell.description ?? "")) return true;
@@ -49,6 +61,9 @@ class _BellEditingPageState extends State<BellEditingPage> {
     return false;
   }
 
+  /// checks for saving ability
+  ///  - every thing needs to be filled in properly
+  ///  - and atleast one parameter has to be changed
   void _checkForSave() {
     setState(() {
       _changed = _checkChanged();
@@ -145,7 +160,7 @@ class _BellEditingPageState extends State<BellEditingPage> {
                   ),
                   Expanded(
                     child: TextField(
-                      onChanged: (value) {
+                      onChanged: (_) {
                         _checkForSave();
                       },
                       decoration: const InputDecoration(
@@ -168,7 +183,7 @@ class _BellEditingPageState extends State<BellEditingPage> {
               ),
               Expanded(
                 child: TextField(
-                  onChanged: (value) {
+                  onChanged: (_) {
                     _checkForSave();
                   },
                   keyboardType: TextInputType.multiline,
@@ -268,6 +283,7 @@ class _BellEditingPageState extends State<BellEditingPage> {
   }
 }
 
+/// [AlertDialog] when user tries to go back without saving changes
 AlertDialog confirmationDialog({Function()? onDiscard, Function()? onCancel}) {
   return AlertDialog(
     backgroundColor: Colors.black,

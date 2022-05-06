@@ -23,6 +23,7 @@ class _BellPageState extends State<BellPage> {
   bool _enableBG = true;
   bool _changingOrder = false;
 
+  /// updates the [Bell]s with new database data
   Future<void> _updateBells() async {
     List<Map<String, dynamic>> bellsData = await _dbHandler.getBells();
     List<Bell> newBells = [];
@@ -39,6 +40,7 @@ class _BellPageState extends State<BellPage> {
     });
   }
 
+  /// moves a [Bell] from an [oldPosition] to a [newPosition]
   void _moveBell(int oldPosition, int newPosition) {
     setState(() {
       if (oldPosition < newPosition) {
@@ -56,6 +58,8 @@ class _BellPageState extends State<BellPage> {
     _refresh();
   }
 
+  /// refreshes the [BellPage]
+  /// - @param [settingsOnly] - set [true] to this if you only wanna update settings changes by default its [false]
   void _refresh({bool settingsOnly = false}) {
     _settings.getBGEnabled.then((value) {
       setState(() {
@@ -107,7 +111,7 @@ class _BellPageState extends State<BellPage> {
                     MaterialPageRoute(
                       builder: (context) => const SettingsPage(),
                     ),
-                  ).then((value) => _refresh(settingsOnly: true));
+                  ).then((_) => _refresh(settingsOnly: true));
                 },
                 child: const Icon(Icons.settings),
                 style: ButtonStyle(
@@ -124,38 +128,32 @@ class _BellPageState extends State<BellPage> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xff53a679),
         tooltip: "add new bell",
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          // adds a new bell
+          Bell? newBell = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => const AddNewBellPage(),
             ),
-          ).then((bell) {
-            if (bell != null) {
-              bell.position = bells.length;
-              _dbHandler.insertBell(bell).then((bellId) {
-                setState(() {
-                  _updateBells();
-                });
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => BellEditingPage(
-                      bell: bell..id = bellId,
-                    ),
-                  ),
-                ).then((value) {
-                  if (value != null) {
-                    _dbHandler.updateBell(value).then((value) {
-                      setState(() {
-                        _updateBells();
-                      });
-                    });
-                  }
-                });
-              });
+          );
+          if (newBell != null) {
+            newBell.position = bells.length;
+            // inserting the new bell to the DataBase
+            int bellId = await _dbHandler.insertBell(newBell);
+            _updateBells();
+            Bell? editedBell = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => BellEditingPage(
+                  bell: newBell..id = bellId,
+                ),
+              ),
+            );
+            if (editedBell != null) {
+              await _dbHandler.updateBell(editedBell);
+              _updateBells();
             }
-          });
+          }
         },
         child: const Icon(Icons.add_alert),
       ),
@@ -248,12 +246,9 @@ class _BellPageState extends State<BellPage> {
                                                     .withOpacity(0.1)),
                                       ),
                                       child: const Text("Delete"),
-                                      onPressed: () {
-                                        _dbHandler
-                                            .deleteBell(bell)
-                                            .then((value) {
-                                          _updateBells();
-                                        });
+                                      onPressed: () async {
+                                        await _dbHandler.deleteBell(bell);
+                                        await _updateBells();
                                         Navigator.pop(context);
                                       },
                                     ),
@@ -300,23 +295,19 @@ class _BellPageState extends State<BellPage> {
                                     force: true, disableTimer: true);
                               }
                             },
-                            onTap: (Bell bell) {
-                              Navigator.push(
+                            onTap: (Bell bell) async {
+                              Bell? editedBell = await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => BellEditingPage(
                                     bell: bell,
                                   ),
                                 ),
-                              ).then((value) {
-                                if (value != null) {
-                                  _dbHandler.updateBell(value).then((value) {
-                                    setState(() {
-                                      _updateBells();
-                                    });
-                                  });
-                                }
-                              });
+                              );
+                              if (editedBell != null) {
+                                await _dbHandler.updateBell(editedBell);
+                                await _updateBells();
+                              }
                             },
                           ),
                         ),

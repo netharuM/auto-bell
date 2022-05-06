@@ -125,6 +125,8 @@ class _MyAppState extends State<MyApp> with WindowListener {
           }),
         ),
         tooltipTheme: TooltipThemeData(
+          showDuration:
+              const Duration(), //setting the show duration to minimum as possible
           decoration: BoxDecoration(
             color: const Color(0xff32363d),
             borderRadius: BorderRadius.circular(8),

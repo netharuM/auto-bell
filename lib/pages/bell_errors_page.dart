@@ -3,15 +3,13 @@ import 'package:auto_bell/widgets/title_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class BellErrorsPage extends StatefulWidget {
+/// shows errors of a [Bell]
+/// - [bellErrors] errors of the [Bell]
+class BellErrorsPage extends StatelessWidget {
+  /// errors of the [Bell]
   final BellErrors bellErrors;
   const BellErrorsPage({Key? key, required this.bellErrors}) : super(key: key);
 
-  @override
-  State<BellErrorsPage> createState() => _BellErrorsPageState();
-}
-
-class _BellErrorsPageState extends State<BellErrorsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,7 +28,7 @@ class _BellErrorsPageState extends State<BellErrorsPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Errors on bell "${widget.bellErrors.parent.title}"',
+                  'Errors on bell "${bellErrors.parent.title}"',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
@@ -59,7 +57,7 @@ class _BellErrorsPageState extends State<BellErrorsPage> {
             Expanded(
               child: ListView(
                 children: [
-                  for (var bellError in widget.bellErrors.getErrorsList)
+                  for (var bellError in bellErrors.getErrorsList)
                     BellErrorWidget(
                       bellError: bellError,
                     ),

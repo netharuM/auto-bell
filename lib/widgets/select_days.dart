@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// week days picker
 class SelectDays extends StatefulWidget {
   final List<bool> days;
   final Function()? onChange;

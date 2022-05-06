@@ -127,9 +127,17 @@ class ApplicationSettingsPage extends StatefulWidget {
 
 class _ApplicationSettingsPageState extends State<ApplicationSettingsPage> {
   final Settings _settings = Settings.instance;
+
+  /// launch on system startup
   late bool _launchOnStartup;
+
+  /// preventing close
   late bool _preventClose;
+
+  /// showing notifications
   late bool _showNotifications;
+
+  /// show back ground image
   late bool _showBG;
 
   @override
