@@ -88,7 +88,7 @@ class DBHandler {
     }
   }
 
-  Future<void> fixTasksPosition() async {
+  Future<void> fixBellPositions() async {
     List<Map<String, dynamic>> bellsMap = await getBells();
     for (var i = 0; i < bellsMap.length; i++) {
       Bell fixedBell = Bell()
@@ -104,7 +104,7 @@ class DBHandler {
     bell.dispose();
     int deletedId =
         await db.delete('bells', where: 'id = ?', whereArgs: [bell.id]);
-    fixTasksPosition();
+    fixBellPositions();
     return deletedId;
   }
 }

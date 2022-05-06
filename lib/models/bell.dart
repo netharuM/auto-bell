@@ -1,10 +1,75 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'package:auto_bell/settings.dart';
+
+enum BellError {
+  audioFileNotFound,
+}
+
+/// just a wrapper around the [BellError] with extra info
+class BellErrorExtended {
+  final BellError error;
+  final String? description;
+  final String? title;
+  final String? help;
+  const BellErrorExtended(
+      {required this.error, this.description, this.title, this.help});
+
+  @override
+  int get hashCode => Object.hash(error, description, title);
+
+  @override
+  bool operator ==(dynamic other) {
+    return error == other.error;
+  }
+}
+
+class BellErrors {
+  final Bell parent;
+  final List<BellErrorExtended> _errorsList = [];
+  BellErrors({
+    required this.parent,
+  });
+
+  /// returns [true] if there is any errors otherwise it will return [false]
+  bool get isThereErrors => _errorsList.isNotEmpty;
+
+  /// number of errors in the errorsList
+  int get errorCount => _errorsList.length;
+
+  /// the errorsList
+  List<BellErrorExtended> get getErrorsList => _errorsList;
+
+  /// return [true] if value was in the errorsList otherwise [false]
+  bool add(BellErrorExtended error) {
+    if (!_errorsList.contains(error)) {
+      _errorsList.add(error);
+      return true;
+    }
+    return false;
+  }
+
+  /// return [true] if value was in the errorsList otherwise [false]
+  bool remove(BellErrorExtended error) {
+    return _errorsList.remove(error);
+  }
+
+  @override
+  int get hashCode => Object.hash(_errorsList, parent);
+
+  @override
+  bool operator ==(dynamic other) {
+    if (other.runtimeType != runtimeType) return false;
+    if (errorCount != other.errorCount) return false;
+    return getErrorsList
+        .every((element) => other.getErrorsList.contains(element));
+  }
+}
 
 class Bell {
   TimeOfDay? time;
@@ -46,6 +111,25 @@ class Bell {
     if (activateOnInit) activateBell();
   }
 
+  Future<BellErrors> get getErrors async {
+    BellErrors bellErrors = BellErrors(parent: this);
+    if (pathToAudio != null) {
+      // if there is a audio file we are checking if there is any errors with it
+      File audioFile = File(pathToAudio!);
+      if (!await audioFile.exists()) {
+        bellErrors.add(
+          BellErrorExtended(
+            error: BellError.audioFileNotFound,
+            title: 'audio file is not found',
+            description: '"$pathToAudio" doesn\'t exist',
+            help: 'please make sure that this "$pathToAudio" file exists',
+          ),
+        );
+      }
+    }
+    return bellErrors;
+  }
+
   Future<void> dispose() async {
     await deactivateBell();
     await _audioPlayer.dispose();
@@ -61,9 +145,14 @@ class Bell {
     await _localNotifier.notify(notification);
   }
 
-  void activateBell({bool force = false, bool disableTimer = false}) {
+  Future<void> activateBell(
+      {bool force = false, bool disableTimer = false}) async {
     assert(time != null);
     assert(pathToAudio != null);
+    if ((await getErrors).isThereErrors) {
+      debugPrint('there are errors so not activating bell : "$title"');
+      return;
+    }
     String weekDay = DateFormat.EEEE().format(DateTime.now());
     if (force ||
         weekDay == "Monday" && days[0] ||
@@ -83,23 +172,22 @@ class Bell {
             }
           },
         );
-        _settings.getShowNotifications.then((value) {
-          if (value ?? true) {
-            Duration ringAt = (dateTime.subtract(const Duration(minutes: 1)))
-                .difference(DateTime.now());
-            notifyDown = Timer(
-              ringAt,
-              () {
-                if (!ringAt.isNegative) {
-                  notify();
-                }
-              },
-            );
-          }
-        });
+        bool showNotification = await _settings.getShowNotifications ?? true;
+        if (showNotification) {
+          Duration ringAt = (dateTime.subtract(const Duration(minutes: 1)))
+              .difference(DateTime.now());
+          notifyDown = Timer(
+            ringAt,
+            () async {
+              if (!ringAt.isNegative) {
+                await notify();
+              }
+            },
+          );
+        }
       }
-      _audioPlayer.setFilePath(pathToAudio!);
-      _audioPlayer.setLoopMode(LoopMode.off);
+      await _audioPlayer.setFilePath(pathToAudio!);
+      await _audioPlayer.setLoopMode(LoopMode.off);
       _audioPlayer.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
           if (onStop != null) onStop!();
@@ -113,8 +201,10 @@ class Bell {
   get dateTime => DateTime(DateTime.now().year, DateTime.now().month,
       DateTime.now().day, time!.hour, time!.minute);
 
-  bool get activateable {
-    return pathToAudio != null && time != null;
+  Future<bool> get activateable async {
+    return pathToAudio != null &&
+        time != null &&
+        !(await getErrors).isThereErrors;
   }
 
   bool get timerActive =>

@@ -124,6 +124,13 @@ class _MyAppState extends State<MyApp> with WindowListener {
                 : const Color(0xff414855);
           }),
         ),
+        tooltipTheme: TooltipThemeData(
+          decoration: BoxDecoration(
+            color: const Color(0xff32363d),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(8),
+        ),
         timePickerTheme: TimePickerThemeData(
           backgroundColor: const Color(0xFF2C2F36),
           dialTextColor: Colors.white,
@@ -135,6 +142,9 @@ class _MyAppState extends State<MyApp> with WindowListener {
         textTheme: Typography().white,
         scrollbarTheme: ScrollbarThemeData(
           thumbColor: MaterialStateProperty.all(const Color(0xff414855)),
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.white,
         ),
       ),
       home: const BellPage(),

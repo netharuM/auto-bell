@@ -23,20 +23,19 @@ class _BellPageState extends State<BellPage> {
   bool _enableBG = true;
   bool _changingOrder = false;
 
-  void _updateBells() {
-    _dbHandler.getBells().then((List<Map<String, dynamic>> value) {
-      List<Bell> newBells = [];
-      for (var bellData in value) {
-        newBells.add(
-          Bell()..fromMap(bellData, intAsBool: true, listAsStrings: true),
-        );
-      }
-      for (var bell in bells) {
-        bell.dispose();
-      }
-      setState(() {
-        bells = newBells;
-      });
+  Future<void> _updateBells() async {
+    List<Map<String, dynamic>> bellsData = await _dbHandler.getBells();
+    List<Bell> newBells = [];
+    for (var bellData in bellsData) {
+      newBells.add(
+        Bell()..fromMap(bellData, intAsBool: true, listAsStrings: true),
+      );
+    }
+    for (var bell in bells) {
+      bell.dispose();
+    }
+    setState(() {
+      bells = newBells;
     });
   }
 
@@ -277,36 +276,29 @@ class _BellPageState extends State<BellPage> {
                                 ),
                               );
                             },
-                            onEnabled: (Bell bell) {
-                              _dbHandler
-                                  .updateBell(bell
-                                    ..activateOnInit = !bell.activateOnInit)
-                                  .then((value) {
-                                _updateBells();
-                              });
+                            onEnabled: (Bell bell) async {
+                              await _dbHandler.updateBell(
+                                  bell..activateOnInit = !bell.activateOnInit);
+                              await _updateBells();
                             },
-                            onDisabled: (Bell bell) {
-                              _dbHandler
-                                  .updateBell(bell
-                                    ..activateOnInit = !bell.activateOnInit)
-                                  .then((value) {
-                                _updateBells();
-                              });
+                            onDisabled: (Bell bell) async {
+                              await _dbHandler.updateBell(
+                                  bell..activateOnInit = !bell.activateOnInit);
+                              await _updateBells();
                             },
-                            onPlay: (Bell bell) {
+                            onPlay: (Bell bell) async {
                               if (!bell.activated) {
-                                bell.activateBell(
+                                await bell.activateBell(
                                     force: true, disableTimer: true);
                               }
-                              bell.playBell();
+                              await bell.playBell();
                             },
-                            onStop: (Bell bell) {
-                              bell.stopBell().then((value) {
-                                if (!bell.activated) {
-                                  bell.activateBell(
-                                      force: true, disableTimer: true);
-                                }
-                              });
+                            onStop: (Bell bell) async {
+                              await bell.stopBell();
+                              if (!bell.activated) {
+                                await bell.activateBell(
+                                    force: true, disableTimer: true);
+                              }
                             },
                             onTap: (Bell bell) {
                               Navigator.push(
