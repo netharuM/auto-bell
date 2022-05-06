@@ -430,7 +430,7 @@ class _ShakeWidgetState extends State<ShakeWidget>
         _controller.repeat(reverse: true);
       });
     } else {
-      _controller.stop();
+      _controller.reset();
     }
     return SlideTransition(
       position: _offsetAnimation,
