@@ -180,7 +180,8 @@ class _BellPageState extends State<BellPage> {
               child: BellCardData(
                 shake: _changingOrder,
                 child: ReorderableListView(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.only(
+                      top: 8, left: 8, right: 8, bottom: 64),
                   onReorder: (int oldIndex, int newIndex) {
                     debugPrint("Reordered $oldIndex to $newIndex");
                     _moveBell(oldIndex, newIndex);

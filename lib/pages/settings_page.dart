@@ -1,6 +1,7 @@
 import 'package:auto_bell/settings.dart';
 import 'package:auto_bell/widgets/title_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -44,8 +45,31 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-class InfoPage extends StatelessWidget {
+class InfoPage extends StatefulWidget {
   const InfoPage({Key? key}) : super(key: key);
+
+  @override
+  State<InfoPage> createState() => _InfoPageState();
+}
+
+class _InfoPageState extends State<InfoPage> {
+  PackageInfo _packageInfo = PackageInfo(
+    appName: 'Unknown',
+    packageName: 'Unknown',
+    version: ' Unknown',
+    buildNumber: 'Unknown',
+    buildSignature: 'Unknown',
+  );
+
+  @override
+  void initState() {
+    PackageInfo.fromPlatform().then((packageInfo) {
+      setState(() {
+        _packageInfo = packageInfo;
+      });
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +135,11 @@ class InfoPage extends StatelessWidget {
               label: const Text('Source Code'),
             )
           ],
-        )
+        ),
+        Text(
+          'version : v${_packageInfo.version}',
+          style: const TextStyle(color: Colors.grey),
+        ),
       ],
     );
   }
