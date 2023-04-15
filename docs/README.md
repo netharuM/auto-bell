@@ -2,7 +2,7 @@
 
 ![app-icon](assets/icon.ico)
 
-a autobell system for isipathana college media unit
+an autobell system for isipathana college media unit
 
 ## previews
 
@@ -10,7 +10,7 @@ a autobell system for isipathana college media unit
 
 ![home-page](assets/homePage.png "homePage")
 
-### reordering bells
+### re-ordering the bells
 
 ![reordering](assets/reordering.png "reordering")
 
